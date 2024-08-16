@@ -182,6 +182,34 @@
                     "isPartOfComposite": true
                 }
             ]
+        },
+        {
+            "name": "Jumping",
+            "id": "85857ed0-ee14-49cc-bafc-9baa9a68474f",
+            "actions": [
+                {
+                    "name": "Jump",
+                    "type": "Button",
+                    "id": "51d2c220-861d-4527-9a58-77f7a6f7de37",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "fdd803a5-0539-43d8-84fd-d647c2e6aec3",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [
