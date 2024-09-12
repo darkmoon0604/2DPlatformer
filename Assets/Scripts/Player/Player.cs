@@ -17,7 +17,8 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float m_JumpTime = 0.5f;
     private float m_JumpTimeCounter;
-    private bool m_IsJump = false;
+    private bool m_IsJumping = false;
+    private bool m_IsFalling;
 
     [Header("Ground")]
     [SerializeField]
@@ -35,6 +36,8 @@ public class Player : MonoBehaviour
     private Animator m_Animator;
     private RaycastHit2D m_GroundHit;
 
+    private Coroutine m_ResetTrigger;
+
     private bool m_IsFaceRight;
     public bool IsFaceRight { get => m_IsFaceRight; set => m_IsFaceRight = value; }
 
@@ -47,6 +50,13 @@ public class Player : MonoBehaviour
         CheckDirectionCheck();
     }
 
+    private void Update()
+    {
+        Move();
+        Jump();
+    }
+
+    #region Movement
     private void Move()
     {
         m_MoveInput = UserInput.Instance.MoveInput.x;
@@ -63,40 +73,53 @@ public class Player : MonoBehaviour
 
         m_Rigidbody.velocity = new Vector2(m_MoveInput * m_MoveSpeed, m_Rigidbody.velocity.y);
     }
+    #endregion
 
+    #region Jump
     private void Jump()
     {
         if (UserInput.Instance.Controls.Jumping.Jump.WasPerformedThisFrame() && IsGrounded())
         {
-            m_IsJump = true;
+            m_IsJumping = true;
             m_JumpTimeCounter = m_JumpTime;
             m_Rigidbody.velocity = new Vector2(m_Rigidbody.velocity.x, m_JumpForce);
+
+            m_Animator.SetTrigger("jump");
         }
 
         if (UserInput.Instance.Controls.Jumping.Jump.IsPressed())
         {
-            if (m_JumpTimeCounter > 0 && m_IsJump)
+            if (m_JumpTimeCounter > 0 && m_IsJumping)
             {
                 m_Rigidbody.velocity = new Vector2(m_Rigidbody.velocity.x, m_JumpForce);
                 m_JumpTimeCounter -= Time.deltaTime;
             }
+            else if (!m_JumpTimeCounter.Equals(0))
+            {
+                m_IsFalling = true;
+                m_IsJumping = false;
+            }
             else
             {
-                m_IsJump = false;
+                m_IsJumping = false;
             }
         }
 
         if (UserInput.Instance.Controls.Jumping.Jump.WasReleasedThisFrame())
         {
-            m_IsJump = false;
+            m_IsFalling = true;
+            m_IsJumping = false;
+        }
+
+        if (!m_IsJumping && CheckForLand())
+        {
+            m_Animator.SetTrigger("land");
+            m_ResetTrigger = StartCoroutine(Reset());
         }
     }
+    #endregion
 
-    private void CheckDirectionCheck()
-    {
-        m_IsFaceRight = m_RightLeg.transform.position.x > m_LeftLeg.transform.position.x;
-    }
-
+    #region Turn Check
     private void TurnCheck()
     {
         if (UserInput.Instance.MoveInput.x > 0 && !m_IsFaceRight)
@@ -116,12 +139,13 @@ public class Player : MonoBehaviour
         m_IsFaceRight = !m_IsFaceRight;
     }
 
-    private void Update()
+    private void CheckDirectionCheck()
     {
-        Move();
-        Jump();
+        m_IsFaceRight = m_RightLeg.transform.position.x > m_LeftLeg.transform.position.x;
     }
+    #endregion
 
+    #region Ground Check
     private bool IsGrounded()
     {
         m_GroundHit = Physics2D.BoxCast(m_Collider.bounds.center, m_Collider.bounds.size, 0f, Vector2.down, m_ExtraHeight, m_Ground);
@@ -131,4 +155,24 @@ public class Player : MonoBehaviour
         }
         return false;
     }
+
+    private bool CheckForLand()
+    {
+        if (m_IsFalling)
+        {
+            if (IsGrounded())
+            {
+                m_IsFalling = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private IEnumerator Reset()
+    {
+        yield return null;
+        m_Animator.ResetTrigger("land");
+    }
+    #endregion
 }
