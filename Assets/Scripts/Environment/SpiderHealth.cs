@@ -1,3 +1,4 @@
+using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,15 +10,19 @@ public class SpiderHealth : MonoBehaviour, IDamageable
 
     private float m_CurrentHealth = 0.0f;
 
+    private CinemachineImpulseSource m_ImpulseSource;
+
     public bool HasTakenDamage { get; set; }
 
     private void Start()
     {
         m_CurrentHealth = m_MaxHealth;
+        m_ImpulseSource = GetComponent<CinemachineImpulseSource>();
     }
 
     public void Damage(float value)
     {
+        CameraShakeManager.Instance.CameraShake(m_ImpulseSource);
         HasTakenDamage = true;
         m_CurrentHealth -= value;
         if (m_CurrentHealth <= 0)
